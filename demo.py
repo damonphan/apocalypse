@@ -10,6 +10,11 @@ import threading
 model = YOLO("yolov8n.pt")
 
 cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Error: Camera not found or failed to open.")
+else:
+    print("Camera opened successfully.")
+
 roles = ["Infected", "Traitor", "Robot"]
 
 classes = [
