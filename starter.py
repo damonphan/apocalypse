@@ -27,10 +27,31 @@ Gray = (141, 149, 161)
 #Tile Size
 tile_size = 40
 
+# Main Character Size
+
+mainWidth = 60
+mainHeight = 100
+
+
+# John Size (bigger than main)
+
+johnWidth = 40
+johnHeight = 120
+
+# Computer Size (Huge)
+
+computerWidth = 200
+computerHeight = 300
+
+# Trash Size (Smaller than character but bigger than it is now)
+
+trashWidth = 60
+trashHeight = 80
+
+
 #ground images
 ground_img = pygame.image.load("images/ground.png")
 ground_img = pygame.transform.scale(ground_img, (tile_size, tile_size))
-
 
 
 # overlay for newspaper progression
@@ -40,8 +61,8 @@ overlay_images = [
     pygame.transform.scale(pygame.image.load("images/overlay_3(text).png"), (screen_width, screen_height)),
     pygame.transform.scale(pygame.image.load("images/overlay_4(text).png"), (screen_width, screen_height)),
     pygame.transform.scale(pygame.image.load("images/overlay_5.png"), (screen_width, screen_height))
-    
 ]
+
 current_overlay_index = 0
 show_overlay = False
 newspaper_read = False
@@ -60,6 +81,9 @@ class Player():
             pygame.image.load('images/walk_1.png'),
             pygame.image.load('images/walk_2.png')
 
+        ]
+        self.images_right = [
+            pygame.transform.scale(images, (mainWidth, mainHeight)) for images in self.images_right
         ]
         self.images_left = [
             pygame.transform.flip(images,True,False) for images in self.images_right
@@ -184,7 +208,7 @@ class Game:
 class GroundObject():
     def __init__(self, x, y):
         self.image = pygame.image.load("images/waste.png")
-        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.image = pygame.transform.scale(self.image, (trashWidth, trashHeight))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -195,32 +219,56 @@ class GroundObject():
 class NPC:
     def __init__(self, x, y):
         self.image = pygame.image.load("images/john.png")
-        self.image = pygame.transform.scale(self.image, (tile_size, tile_size * 2))  # Taller NPC
+        self.image = pygame.transform.scale(self.image, (johnWidth, johnHeight))  # Taller NPC
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.clicked = False
         self.dialogue_options = [
-            "I had a dream about this day.",
-            "Have you been chipped yet?",
-            "It's been so long since I've seen flesh and blood around here.",
-            "You're not supposed to be this far. Hide before it sees you."
+            "I had a dream about this day. They have taken over. GO HIDE."
         ]
         self.dialogue_font = pygame.font.SysFont('Arial', 20)
         self.dialogue_surface = None
+
     def draw(self):
         screen.blit(self.image, self.rect)
         if self.clicked and self.dialogue_surface:
-            screen.blit(self.dialogue_surface, (self.rect.x - 20, self.rect.y - 40))
+            # Padding for text
+            padding = 10
+            text_w, text_h = self.dialogue_surface.get_size()
+            bubble_w = text_w + padding * 2
+            bubble_h = text_h + padding * 2
+
+            # Position bubble above NPC
+            bubble_x = self.rect.x + self.rect.width // 2 - bubble_w // 2
+            bubble_y = self.rect.y - bubble_h - 10
+
+            # Draw speech bubble background and border
+            bubble_rect = pygame.Rect(bubble_x, bubble_y, bubble_w, bubble_h)
+            pygame.draw.rect(screen, (255, 255, 255), bubble_rect, border_radius=8)
+            pygame.draw.rect(screen, (0, 0, 0), bubble_rect, 2, border_radius=8)
+
+            # Draw speech triangle (tail)
+            point1 = (self.rect.centerx, self.rect.y)
+            point2 = (self.rect.centerx - 10, bubble_y + bubble_h)
+            point3 = (self.rect.centerx + 10, bubble_y + bubble_h)
+            pygame.draw.polygon(screen, (255, 255, 255), [point1, point2, point3])
+            pygame.draw.polygon(screen, (0, 0, 0), [point1, point2, point3], 2)
+
+            # Draw text
+            screen.blit(self.dialogue_surface, (bubble_x + padding, bubble_y + padding))
+
+
     def interact(self):
         if not self.clicked:
             self.clicked = True
             dialogue_text = random.choice(self.dialogue_options)
             self.dialogue_surface = self.dialogue_font.render(dialogue_text, True, (3, 23, 252))
+
 class ComputerObject:
     def __init__(self, x, y):
         self.image = pygame.image.load("images/computer.png")
-        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.image = pygame.transform.scale(self.image, (computerWidth, computerHeight))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -229,19 +277,17 @@ class ComputerObject:
         screen.blit(self.image, self.rect)
 
 
-
-
-computer_object = ComputerObject(200, ground_y - tile_size)
+computer_object = ComputerObject(400, ground_y - computerHeight)
 game = Game()
 player = Player(100, 0)
-ground_object = GroundObject(400, ground_y - tile_size)  # Add object at some point on the ground
+ground_object = GroundObject(400, ground_y - trashHeight)  # Add object at some point on the ground
 
 run = True
+
 while run:
     clock.tick(fps)
 
     screen.blit(game.get_background(), (0, 0))
-
 
     # Draw ground
     for x in range(0, screen_width, tile_size):
@@ -254,8 +300,6 @@ while run:
         player.update(john_npc if john_npc and not john_npc.clicked else None)
     else:
         player.update(None)
-
-
     
     # Update game state
     game.update(player)  # Check if the player has reached the end
@@ -266,11 +310,6 @@ while run:
     
     if game.screen_state == "level_4" and john_npc:
         john_npc.draw()
-    if game.screen_state == "level_5":
-        if computer_object is None:
-            computer_object = ComputerObject(200, ground_y - tile_size)
-        computer_object.draw()
-
 
     if show_overlay and current_overlay_index < len(overlay_images):
         screen.blit(overlay_images[current_overlay_index], (0, 0))
@@ -278,7 +317,8 @@ while run:
     pygame.display.update()
 
     if game.screen_state == "level_4" and john_npc is None:
-        john_npc = NPC(300, ground_y - tile_size * 2)
+        john_npc = NPC(200, ground_y - johnHeight)
+    
 
     # Event handling
     for event in pygame.event.get():
@@ -306,11 +346,4 @@ while run:
             elif game.screen_state == "level_5" and computer_object and computer_object.rect.collidepoint(event.pos):
                 import subprocess
                 subprocess.Popen([sys.executable, "demo.py"])
-
-
-    
-
-
 pygame.quit()
-
-
