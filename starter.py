@@ -31,10 +31,18 @@ tile_size = 40
 ground_img = pygame.image.load("images/ground.png")
 ground_img = pygame.transform.scale(ground_img, (tile_size, tile_size))
 
-#overlay for newspaper and flag
-newspaper_overlay = pygame.image.load("images/newspaper_overlay.png")
-newspaper_overlay = pygame.transform.scale(newspaper_overlay, (screen_width, screen_height))
 
+
+# overlay for newspaper progression
+overlay_images = [
+    pygame.transform.scale(pygame.image.load("images/overlay_1.png"), (screen_width, screen_height)),
+    pygame.transform.scale(pygame.image.load("images/overlay_2.png"), (screen_width, screen_height)),
+    pygame.transform.scale(pygame.image.load("images/overlay_3(text).png"), (screen_width, screen_height)),
+    pygame.transform.scale(pygame.image.load("images/overlay_4(text).png"), (screen_width, screen_height)),
+    pygame.transform.scale(pygame.image.load("images/overlay_5.png"), (screen_width, screen_height))
+    
+]
+current_overlay_index = 0
 show_overlay = False
 newspaper_read = False
 computer_object = None
@@ -264,8 +272,9 @@ while run:
         computer_object.draw()
 
 
-    if show_overlay:
-        screen.blit(newspaper_overlay, (0, 0))
+    if show_overlay and current_overlay_index < len(overlay_images):
+        screen.blit(overlay_images[current_overlay_index], (0, 0))
+
     pygame.display.update()
 
     if game.screen_state == "level_4" and john_npc is None:
@@ -278,14 +287,17 @@ while run:
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if show_overlay:
-                # Close overlay
-                show_overlay = False
-                player.can_move = True
-                newspaper_read = True
+                current_overlay_index += 1
+                if current_overlay_index >= len(overlay_images):
+                    # Close overlay
+                    show_overlay = False
+                    player.can_move = True
+                    newspaper_read = True
 
             elif not show_overlay and game.screen_state == "level_2" and not newspaper_read:
                 if ground_object.rect.collidepoint(event.pos):
                     show_overlay = True
+                    current_overlay_index = 0
                     player.can_move = False
 
             elif game.screen_state == "level_4" and john_npc and john_npc.rect.collidepoint(event.pos):
