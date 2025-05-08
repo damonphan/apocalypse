@@ -29,23 +29,23 @@ tile_size = 40
 
 # Main Character Size
 
-mainWidth = 60
+mainWidth = 100
 mainHeight = 100
 
 
 # John Size (bigger than main)
 
-johnWidth = 40
+johnWidth = 120
 johnHeight = 120
 
 # Computer Size (Huge)
 
-computerWidth = 200
+computerWidth = 300
 computerHeight = 300
 
 # Trash Size (Smaller than character but bigger than it is now)
 
-trashWidth = 60
+trashWidth = 80
 trashHeight = 80
 
 
@@ -282,7 +282,7 @@ class ComputerObject:
         screen.blit(self.image, self.rect)
 
 
-computer_object = ComputerObject(400, ground_y - computerHeight)
+computer_object = ComputerObject(300, ground_y - computerHeight)
 
 
 game = Game()
